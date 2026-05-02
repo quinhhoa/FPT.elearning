@@ -1,0 +1,9 @@
+uploads/
+.env
+*.log
+.DS_Store
+node_modules/
+.idea/
+.vscode/
+*.swp
+*.swo
