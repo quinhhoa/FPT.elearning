@@ -78,7 +78,7 @@
   </div>
   
 <script>
-    // 1. Tải danh mục an toàn
+    // Tải danh mục an toàn
     async function loadFilterCategories() {
         try {
             const res = await fetch('api/get_courses.php?view=admin');
@@ -90,7 +90,7 @@
         } catch (error) { console.error("Lỗi lấy danh mục", error); }
     }
 
-    // 2. Tải & Lọc Khóa học
+    //  Tải & Lọc Khóa học
     async function loadAdminCourses() {
         try {
             const keyword = document.getElementById("filter-keyword").value;
@@ -113,7 +113,7 @@
                 return;
             }
 
-            // ĐÃ THÊM LOGIC BẢO VỆ ẢNH Ở ĐÂY (onerror)
+            // LOGIC BẢO VỆ ẢNH 
             tbody.innerHTML = courses.map((c, index) => `
                 <tr class="border-b border-gray-200 hover:bg-[#f5f7fa]">
                     <td class="px-1.5 py-1 border-r text-center"><input type="checkbox"></td>
