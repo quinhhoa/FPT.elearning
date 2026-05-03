@@ -9,7 +9,7 @@ CREATE TABLE `users` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 2. BẢNG KHÓA HỌC (Thông tin hiển thị ở màn Dashboard)
+-- 2. BẢNG KHÓA HỌC 
 CREATE TABLE `courses` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `title` varchar(255) NOT NULL,
@@ -75,7 +75,7 @@ CREATE TABLE `exams` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
--- 1. BẢNG DANH MỤC KHÓA HỌC (categories)
+-- 7. BẢNG DANH MỤC KHÓA HỌC (categories)
 CREATE TABLE `categories` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
@@ -92,9 +92,7 @@ INSERT INTO `categories` (`name`) VALUES
 ('Quản lý dự án'),
 ('Hội nhập nhân viên');
 
--- --------------------------------------------------------
-
--- 2. BẢNG TIẾN ĐỘ HỌC VIÊN - KHÓA HỌC (course_student)
+-- 8. BẢNG HỌC VIÊN - KHÓA HỌC (course_student)
 CREATE TABLE `course_student` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `course_id` int(11) NOT NULL,
