@@ -126,7 +126,9 @@
                     </td>
                     <td class="px-1.5 py-1 border-r font-medium text-[#73879C] leading-tight">${c.title}</td>
                     <td class="px-1.5 py-1 border-r text-[11px]">Online</td>
-                    <td class="px-1.5 py-1 border-r text-center">${c.students || 0}</td>
+                    <td class="px-1.5 py-1 border-r text-center">
+                        ${c.max_students == 0 || c.students == 0 ? '<span class="text-[#1ABB9C] font-bold italic">Không giới hạn</span>' : (c.max_students || c.students)}
+                    </td>
                     <td class="px-1.5 py-1 border-r text-[11px]">${c.registration_type}</td>
                     <td class="px-1.5 py-1 border-r text-[11px]">${c.time_range || 'Không giới hạn'}</td>
                     

@@ -163,34 +163,54 @@ async function loadCourseDetail() {
   }
 
   try {
-    const resCourse = await fetch('api/get_courses.php?view=enrolled');
-    const courses = await resCourse.json();
-    const course = courses.find(c => c.id == courseId);
+    // 1. Lấy danh sách khóa user ĐÃ ĐƯỢC GÁN hoặc ĐÃ ĐĂNG KÝ (chứa trạng thái Đang học/Chờ duyệt)
+    const resEnrolled = await fetch('api/get_courses.php?view=enrolled');
+    const enrolledData = await resEnrolled.json();
+    const enrolledCourses = Array.isArray(enrolledData) ? enrolledData : [];
+
+    // 2. Lấy danh sách khóa CÔNG KHAI trên danh mục (dành cho khóa user chưa đăng ký)
+    const resCatalog = await fetch('api/get_courses.php?view=catalog');
+    const catalogData = await resCatalog.json();
+    const catalogCourses = Array.isArray(catalogData) ? catalogData : [];
+
+    // 3. Gộp 2 danh sách lại. Ưu tiên enrolledCourses xếp trước để lấy đúng trạng thái học tập.
+    const allCourses = [...enrolledCourses, ...catalogCourses];
+    
+    // Tìm khóa học dựa trên ID
+    const course = allCourses.find(c => c.id == courseId);
 
     if (!course) {
       document.getElementById("course-title").innerText = "KHÓA HỌC KHÔNG TỒN TẠI";
+      document.getElementById("action-button-container").innerHTML = ''; // Ẩn nút bấm
       return;
     }
 
-    // Hiển thị thông tin Khóa học
+    // --- HIỂN THỊ THÔNG TIN KHÓA HỌC ---
     document.getElementById("course-title").innerText = course.title;
     document.getElementById("breadcrumb-title").innerText = course.title;
     document.getElementById("course-description").innerText = course.description || "Chưa có mô tả cho khóa học này.";
     document.getElementById("course-time").innerText = course.time_range || "Không giới hạn";
-    document.getElementById("student-count").innerText = (course.students || 0) + " học viên";
-    
+
+    // --- LOGIC XỬ LÝ SỐ LƯỢNG HỌC VIÊN CHUẨN XÁC ---
+    let studentLimit = course.max_students !== undefined ? course.max_students : course.students;
+    if (studentLimit == 0 || studentLimit == null || studentLimit === "") {
+        document.getElementById("student-count").innerHTML = '<span class="text-[#1ABB9C] font-bold italic">Không giới hạn</span>';
+    } else {
+        document.getElementById("student-count").innerText = studentLimit + " học viên";
+    }
+
     // --- XỬ LÝ NÚT BẤM CHUẨN NGHIỆP VỤ ---
     let btnHtml = '';
 
-    // 1. Đã đăng ký và được duyệt
-    if (course.enroll_status === 'Đang học' || course.enroll_status === 'Đã hoàn thành') {
+    // Ưu tiên 1: Đã đăng ký và được duyệt / Đã được Admin gán
+    if (course.enroll_status === 'Đang học' || course.enroll_status === 'Đã hoàn thành' || course.enroll_status == 1) {
         btnHtml = `<button onclick="goToLearn(${course.id})" class="mt-6 px-8 py-2.5 bg-[#115293] text-white font-medium rounded hover:bg-[#003366] transition-colors shadow-sm"><i class="fa-solid fa-play mr-2"></i> Vào học</button>`;
     } 
-    // 2. Chờ duyệt
-    else if (course.enroll_status === 'Chờ duyệt') {
+    // Ưu tiên 2: Chờ duyệt
+    else if (course.enroll_status === 'Chờ duyệt' || course.enroll_status == 0) {
         btnHtml = `<button disabled class="mt-6 px-8 py-2.5 bg-gray-400 text-white font-medium rounded cursor-not-allowed shadow-sm"><i class="fa-solid fa-hourglass-half mr-2"></i> Đang chờ duyệt...</button>`;
     } 
-    // 3. Chưa đăng ký
+    // Ưu tiên 3: Chưa có trạng thái (Chưa đăng ký)
     else {
         if (course.registration_type === 'Không cho đăng ký') {
             btnHtml = `<button disabled class="mt-6 px-8 py-2.5 bg-[#e2e8f0] text-[#64748b] font-medium rounded cursor-not-allowed shadow-sm border border-[#cbd5e1]"><i class="fa-solid fa-lock mr-2"></i> Chỉ định nội bộ</button>`;
@@ -204,7 +224,7 @@ async function loadCourseDetail() {
     }
     document.getElementById("action-button-container").innerHTML = btnHtml;
 
-    // Fetch danh sách Bài giảng
+    // --- FETCH DANH SÁCH BÀI GIẢNG ---
     const resLessons = await fetch(`api/get_lessons.php?course_id=${courseId}`);
     const lessons = await resLessons.json();
 

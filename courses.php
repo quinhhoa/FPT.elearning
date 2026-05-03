@@ -213,8 +213,9 @@ $avatar_url = "https://ui-avatars.com/api/?name=" . urlencode($fullname) . "&bac
             <h3 class="font-bold text-fptdark text-[15px] mb-2 line-clamp-2">${course.title}</h3>
             
             <p class="text-[11px] text-gray-500 mb-3 mt-auto flex items-center gap-1">
-               <i class="fa-solid fa-users"></i> ${course.students || 0} Học viên
-            </p>
+               <i class="fa-solid fa-users"></i> 
+               ${course.max_students == 0 || course.students == 0 ? '<span class="text-green-600 font-medium italic">Không giới hạn</span>' : (course.max_students || course.students) + ' Học viên'}
+            </p>              
 
             <div class="flex justify-between items-center border-t pt-3 mt-1">
               <span class="text-[11px] font-medium ${course.registration_type === 'Kiểm duyệt' ? 'text-fptorange' : 'text-green-600'}">

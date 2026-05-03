@@ -112,3 +112,51 @@ INSERT INTO `course_student` (`course_id`, `user_id`, `progress_percentage`, `st
 (1, 1, 100, 'Đã hoàn thành'), -- Khóa số 1 đã học xong 100%
 (2, 1, 45, 'Đang học'),       -- Khóa số 2 đang học dở 45%
 (3, 1, 0, 'Đang học');        -- Khóa số 3 vừa đăng ký, chưa học (0%)
+
+-- Tạo bảng Danh mục tài liệu
+CREATE TABLE `document_categories` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Thêm dữ liệu mẫu cho danh mục
+INSERT INTO `document_categories` (`id`, `name`) VALUES
+(1, 'Quy định học tập FPT'),
+(2, 'Tài liệu chuyên môn IT'),
+(3, 'Tài liệu Kỹ năng mềm'),
+(4, 'Hội nhập nhân viên mới');
+
+-- Tạo bảng Tài liệu
+CREATE TABLE `documents` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `category_id` int(11) NOT NULL,
+  `file_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `file_type` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'pdf',
+  `file_size` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT '0 Kb',
+  `views` int(11) DEFAULT 0,
+  `downloads` int(11) DEFAULT 0,
+  `is_processed` tinyint(1) DEFAULT 1,
+  `status` tinyint(1) DEFAULT 1,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`category_id`) REFERENCES `document_categories`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Thêm dữ liệu mẫu cho tài liệu
+INSERT INTO `documents` (`title`, `category_id`, `file_type`, `file_size`, `created_at`) VALUES
+('Sổ tay bảo mật thông tin FPT IS', 1, 'pdf', '3.45 Mb', '2026-05-01 08:30:00'),
+('Hướng dẫn viết tài liệu SRS cho BA', 2, 'docx', '1.20 Mb', '2026-05-02 09:15:00'),
+('Kỹ năng giao tiếp khách hàng', 3, 'pdf', '5.10 Mb', '2026-05-03 14:20:00');
+
+ALTER TABLE `documents` ADD `file_name` varchar(255) NULL;
+
+ALTER TABLE `documents` ADD `file_type` varchar(20) DEFAULT 'pdf';
+
+ALTER TABLE `documents` ADD `description` text NULL;
+
+ALTER TABLE `documents` 
+ADD `views` INT DEFAULT 0,
+ADD `downloads` INT DEFAULT 0;
+

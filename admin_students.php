@@ -284,38 +284,63 @@ $course_id = isset($_GET['course_id']) ? (int)$_GET['course_id'] : 1;
     }
 
     async function searchUsers() {
-        const keyword = document.getElementById('searchInput').value;
-        const tbody = document.getElementById('search-results');
-        tbody.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-gray-500"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Đang tìm kiếm...</td></tr>`;
+    const keyword = document.getElementById('searchInput').value;
+    const tbody = document.getElementById('search-results');
+    
+    tbody.innerHTML = `<tr><td colspan="3" class="text-center py-8 text-gray-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Đang tìm kiếm học viên...</td></tr>`;
+    
+    try {
+        const res = await fetch(`api/search_users.php?course_id=${courseId}&q=${encodeURIComponent(keyword)}`);
         
+        // Nhận dữ liệu text trước để kiểm tra xem có phải là JSON không
+        const textData = await res.text();
+        
+        let users;
         try {
-            const res = await fetch(`api/search_users.php?course_id=${courseId}&q=${encodeURIComponent(keyword)}`);
-            const users = await res.json();
-            
-            if(users.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-red-500 italic">Không tìm thấy nhân sự.</td></tr>`;
-                return;
-            }
-
-            let html = '';
-            users.forEach(u => {
-                html += `
-                    <tr class="border-b border-gray-100 hover:bg-gray-50">
-                        <td class="px-3 py-2 text-[#337AB7] font-medium">${u.username}<br><span class="text-gray-400 text-[10px] font-normal">${u.department}</span></td>
-                        <td class="px-3 py-2">${u.fullname}<br><span class="text-gray-400">${u.email}</span></td>
-                        <td class="px-3 py-2 text-center">
-                            <button onclick="addStudent(${u.id})" class="bg-[#1ABB9C] text-white px-3 py-1 rounded text-[10px] hover:bg-[#159a80] transition shadow-sm">
-                                <i class="fa-solid fa-plus"></i> Chọn
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            });
-            tbody.innerHTML = html;
-        } catch (error) {
-            tbody.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-red-500">Lỗi kết nối API tìm kiếm.</td></tr>`;
+            users = JSON.parse(textData);
+        } catch (e) {
+            console.error("Lỗi parse JSON. Server trả về:", textData);
+            tbody.innerHTML = `<tr><td colspan="3" class="text-center py-8 text-red-600 font-bold">Lỗi Server (500). Vui lòng nhấn F12 -> Console để xem chi tiết.</td></tr>`;
+            return;
         }
+
+        // Nếu Backend báo lỗi đường dẫn db hoặc SQL
+        if (users.error) {
+            tbody.innerHTML = `<tr><td colspan="3" class="text-center py-8 text-red-600 font-bold"><i class="fa-solid fa-triangle-exclamation mr-2"></i> Lỗi API: ${users.error}</td></tr>`;
+            return;
+        }
+        
+        if(users.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="3" class="text-center py-8 text-red-500 italic"><i class="fa-solid fa-circle-exclamation mr-2"></i> Không tìm thấy nhân sự phù hợp hoặc nhân sự đã có trong khóa học.</td></tr>`;
+            return;
+        }
+
+        let html = '';
+        users.forEach(u => {
+            html += `
+                <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <td class="px-3 py-3 text-[#337AB7] font-medium">
+                        ${u.username}
+                        <div class="text-gray-400 text-[10px] font-normal uppercase">${u.department || 'Chưa cập nhật'}</div>
+                    </td>
+                    <td class="px-3 py-3">
+                        <div class="font-bold text-gray-700">${u.fullname}</div>
+                        <div class="text-gray-400 text-[10px]">${u.email}</div>
+                    </td>
+                    <td class="px-3 py-3 text-center">
+                        <button onclick="addStudent(${u.id})" class="bg-[#1ABB9C] text-white px-4 py-1.5 rounded text-[10px] font-bold hover:bg-[#159a80] transition shadow-sm">
+                            <i class="fa-solid fa-plus mr-1"></i> Chọn
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = html;
+    } catch (error) {
+        console.error("Lỗi Fetch:", error);
+        tbody.innerHTML = `<tr><td colspan="3" class="text-center py-8 text-red-600 font-bold"><i class="fa-solid fa-triangle-exclamation mr-2"></i> Lỗi kết nối API tìm kiếm. File api/search_users.php có thể bị sai tên hoặc sai vị trí.</td></tr>`;
     }
+}
 
     async function addStudent(userId) {
         try {

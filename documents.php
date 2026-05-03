@@ -4,6 +4,17 @@ if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit;
 }
+
+// KẾT NỐI DB ĐỂ LẤY DANH MỤC ĐỘNG
+require_once 'api/db.php'; 
+$categories = [];
+$cat_query = "SELECT id, name FROM document_categories";
+if ($result = $conn->query($cat_query)) {
+    while ($row = $result->fetch_assoc()) {
+        $categories[] = $row;
+    }
+}
+
 $fullname = $_SESSION['fullname'] ?? 'Học viên';
 $role = $_SESSION['role'] ?? 'student'; 
 $avatar_url = "https://ui-avatars.com/api/?name=" . urlencode($fullname) . "&background=115293&color=fff";
@@ -45,27 +56,27 @@ $avatar_url = "https://ui-avatars.com/api/?name=" . urlencode($fullname) . "&bac
         </div>
       </div>
       <div class="flex items-center gap-6">
-        <input type="text" placeholder="Tìm kiếm tài liệu..." class="border rounded-full px-4 py-1.5 text-sm outline-none focus:border-fptblue w-64 shadow-sm"/>
+        <!-- Đã bổ sung sự kiện oninput để tìm kiếm realtime -->
+        <input type="text" id="search-input" oninput="handleSearch()" placeholder="Tìm kiếm tài liệu..." class="border rounded-full px-4 py-1.5 text-sm outline-none focus:border-fptblue w-64 shadow-sm"/>
         <img src="<?= $avatar_url ?>" class="rounded-full w-8 h-8 border border-gray-200 shadow-sm" alt="Avatar"/>
       </div>
     </header>
 
     <main class="p-6 flex-1">
       <div class="flex flex-col lg:flex-row gap-6 h-full">
-        <!-- DANH MỤC -->
+        <!-- DANH MỤC ĐỘNG TỪ CSDL -->
         <aside class="w-full lg:w-1/4">
           <div class="bg-white border border-gray-200 rounded shadow-sm overflow-hidden text-[13px]">
             <div class="bg-gray-50 px-4 py-3 border-b font-bold text-fptblue uppercase">DANH MỤC TÀI LIỆU</div>
             <ul id="category-list">
-              <li onclick="filterDocs('all', this)" class="category-active border-b px-4 py-3 flex justify-between items-center hover:bg-gray-50 cursor-pointer">
+              <li onclick="filterDocs('all', 'Tất cả tài liệu', this)" class="category-active border-b px-4 py-3 flex justify-between items-center hover:bg-gray-50 cursor-pointer transition-colors">
                 <span>Tất cả tài liệu</span> <i class="fa-solid fa-layer-group text-gray-300"></i>
               </li>
-              <li onclick="filterDocs('quydinh', this)" class="border-b px-4 py-3 flex justify-between items-center hover:bg-gray-50 cursor-pointer">
-                <span>Quy định học tập FPT</span> <i class="fa-solid fa-square-plus text-gray-300"></i>
+              <?php foreach ($categories as $cat): ?>
+              <li onclick="filterDocs('<?= $cat['id'] ?>', '<?= htmlspecialchars($cat['name']) ?>', this)" class="border-b px-4 py-3 flex justify-between items-center hover:bg-gray-50 cursor-pointer transition-colors">
+                <span><?= htmlspecialchars($cat['name']) ?></span> <i class="fa-solid fa-folder text-gray-300"></i>
               </li>
-              <li onclick="filterDocs('cttv', this)" class="border-b px-4 py-3 flex justify-between items-center hover:bg-gray-50 cursor-pointer">
-                <span>CTTV</span> <i class="fa-solid fa-square-plus text-gray-300"></i>
-              </li>
+              <?php endforeach; ?>
             </ul>
           </div>
         </aside>
@@ -87,7 +98,9 @@ $avatar_url = "https://ui-avatars.com/api/?name=" . urlencode($fullname) . "&bac
                   <th class="px-4 py-3 text-center">Tải về</th>
                 </tr>
               </thead>
-              <tbody id="doc-body"></tbody>
+              <tbody id="doc-body">
+                <tr><td colspan="5" class="text-center py-8 text-gray-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang tải dữ liệu...</td></tr>
+              </tbody>
             </table>
           </div>
         </section>
@@ -102,36 +115,102 @@ $avatar_url = "https://ui-avatars.com/api/?name=" . urlencode($fullname) . "&bac
   const menuToggle = document.getElementById('menu-toggle');
   const contentWrapper = document.getElementById('content-wrapper');
 
-  menuToggle.addEventListener('click', () => {
-    sidebar.classList.toggle('w-16'); sidebar.classList.toggle('w-64');
-    sidebar.classList.toggle('expanded'); contentWrapper.classList.toggle('ml-16');
-    contentWrapper.classList.toggle('ml-64');
-  });
-
-  const allDocs = [
-    { stt: 1, name: 'Hướng dẫn bảo mật FPT', size: '1.2 Mb', views: 15, category: 'quydinh' },
-    { stt: 2, name: 'Test 1', size: '38,48 Kb', views: 8, category: 'cttv' },
-    { stt: 3, name: 'Tài liệu con', size: '93,42 Kb', views: 4, category: 'cttv' }
-  ];
-
-  function filterDocs(cat, el) {
-    document.querySelectorAll('#category-list li').forEach(li => li.classList.remove('category-active'));
-    el.classList.add('category-active');
-    document.getElementById('current-cat-name').innerText = el.querySelector('span').innerText;
-
-    const filtered = cat === 'all' ? allDocs : allDocs.filter(d => d.category === cat);
-    document.getElementById('doc-body').innerHTML = filtered.map((d, i) => `
-      <tr class="border-b hover:bg-gray-50 text-[13px]">
-        <td class="px-4 py-4 text-center border-r">${i+1}</td>
-        <td class="px-4 py-4 border-r font-medium text-fptblue hover:underline cursor-pointer">${d.name}</td>
-        <td class="px-4 py-4 text-center border-r text-gray-500 italic">${d.size}</td>
-        <td class="px-4 py-4 text-center border-r">${d.views}</td>
-        <td class="px-4 py-4 text-center"><button class="bg-fptorange text-white p-1.5 rounded shadow-sm"><i class="fa-solid fa-download text-xs"></i></button></td>
-      </tr>
-    `).join('');
+  if(menuToggle) {
+      menuToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('w-16'); sidebar.classList.toggle('w-64');
+        sidebar.classList.toggle('expanded'); contentWrapper.classList.toggle('ml-16');
+        contentWrapper.classList.toggle('ml-64');
+      });
   }
 
-  document.addEventListener('DOMContentLoaded', () => filterDocs('all', document.querySelector('#category-list li')));
+  // --- LOGIC KẾT NỐI API VÀ LỌC DỮ LIỆU ---
+  let allDocs = [];
+  let currentActiveCategory = 'all';
+
+  // Lấy dữ liệu thực từ API đã viết ở phần Admin
+  async function fetchDocuments() {
+      try {
+          const response = await fetch('api/get_documents.php');
+          const data = await response.json();
+          
+          // LỌC QUAN TRỌNG: Chỉ lấy những tài liệu có status = 1 (Đã duyệt)
+          allDocs = data.filter(doc => doc.status == 1);
+          
+          // Render dữ liệu ban đầu
+          filterDocs('all', 'Tất cả tài liệu', document.querySelector('#category-list li'));
+      } catch (error) {
+          console.error("Lỗi tải tài liệu:", error);
+          document.getElementById('doc-body').innerHTML = '<tr><td colspan="5" class="text-center py-8 text-red-500">Không thể kết nối với máy chủ. Vui lòng thử lại sau.</td></tr>';
+      }
+  }
+
+  // Hàm Lọc theo danh mục hoặc từ khóa
+  function filterDocs(catId, catName, el) {
+      currentActiveCategory = catId; // Lưu lại trạng thái danh mục đang chọn
+
+      // Xử lý UI: Đổi màu danh mục được chọn
+      if(el) {
+          document.querySelectorAll('#category-list li').forEach(li => li.classList.remove('category-active'));
+          el.classList.add('category-active');
+          document.getElementById('current-cat-name').innerText = catName;
+      }
+
+      applyFilters(); // Chạy hàm lọc tổng hợp
+  }
+
+  // Lọc realtime qua ô Tìm kiếm
+  function handleSearch() {
+      applyFilters();
+  }
+
+  // Hàm lọc tổng hợp (Lọc theo cả Danh mục lẫn Từ khóa)
+  function applyFilters() {
+      const keyword = document.getElementById('search-input').value.toLowerCase();
+      
+      let filtered = allDocs;
+
+      // Bước 1: Lọc theo danh mục
+      if (currentActiveCategory !== 'all') {
+          filtered = filtered.filter(d => d.category_id == currentActiveCategory);
+      }
+
+      // Bước 2: Lọc theo từ khóa tìm kiếm
+      if (keyword) {
+          filtered = filtered.filter(d => d.title && d.title.toLowerCase().includes(keyword));
+      }
+
+      renderTable(filtered);
+  }
+
+  // Đổ dữ liệu ra bảng
+  function renderTable(data) {
+      const tbody = document.getElementById('doc-body');
+      
+      if (data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-500 italic"><i class="fa-regular fa-folder-open text-2xl mb-2 text-gray-300"></i><br>Không có tài liệu nào phù hợp.</td></tr>';
+          return;
+      }
+
+      tbody.innerHTML = data.map((d, i) => `
+        <tr class="border-b hover:bg-gray-50 text-[13px] transition-colors">
+          <td class="px-4 py-3 text-center border-r">${i+1}</td>
+          <td class="px-4 py-3 border-r font-medium text-fptblue hover:underline cursor-pointer">
+              <!-- Nối link đến API tải file -->
+              <a href="document_detail.php?id=${d.id}">${d.title}</a>
+          </td>
+          <td class="px-4 py-3 text-center border-r text-gray-500 italic">${d.file_size || '0 Kb'}</td>
+          <td class="px-4 py-3 text-center border-r">${d.views || 0}</td>
+          <td class="px-4 py-3 text-center">
+              <button onclick="window.open('api/download_doc.php?id=${d.id}', '_blank')" class="bg-fptorange text-white px-3 py-1.5 rounded shadow-sm hover:bg-orange-600 transition-colors">
+                  <i class="fa-solid fa-download text-xs"></i>
+              </button>
+          </td>
+        </tr>
+      `).join('');
+  }
+
+  // Chạy ngay khi load trang
+  document.addEventListener('DOMContentLoaded', fetchDocuments);
 </script>
 </body>
 </html>
