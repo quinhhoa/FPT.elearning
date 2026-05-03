@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $file_size = '0 Kb';
     $final_file_name = ''; // Tên file sẽ lưu vào CSDL
     
-    // 1. XỬ LÝ UPLOAD FILE VẬT LÝ VÀO THƯ MỤC
+    // XỬ LÝ UPLOAD FILE VẬT LÝ VÀO THƯ MỤC
     if (isset($_FILES['document_file']) && $_FILES['document_file']['error'] === UPLOAD_ERR_OK) {
         
         // Đường dẫn tới thư mục upload của bạn (tính từ file api/ ra ngoài)
@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $file_size = round($size_in_bytes / 1024, 2) . ' Kb';
         }
         
-        // Tạo tên file mới giống với hệ thống của bạn (VD: document_1777475648.pdf)
+        // Tạo tên file mới giống với hệ thống của bạn 
         $new_file_name = 'document_' . time() . '.' . $file_ext;
         $target_file = $upload_dir . $new_file_name;
         
@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // 2. LƯU THÔNG TIN VÀO DATABASE
+    // LƯU THÔNG TIN VÀO DATABASE
     if (!empty($title) && $category_id > 0) {
         $sql = "INSERT INTO documents (title, category_id, file_name, file_type, file_size, description) 
                 VALUES (?, ?, ?, ?, ?, ?)";
