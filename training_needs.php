@@ -103,17 +103,17 @@ if (isset($conn)) {
           <span class="sidebar-text ml-4 text-[13px] font-medium tracking-wide">NHU CẦU ĐÀO TẠO</span>
         </div>
 
-        <div class="flex items-center px-5 py-3.5 cursor-pointer hover:bg-fptblue transition-all">
+        <div class="flex items-center px-5 py-3.5 cursor-pointer hover:bg-fptblue transition-all" onclick="location.href='documents.php'">
           <i class="fas fa-folder-open w-6 text-center text-white/70"></i>
           <span class="sidebar-text ml-4 text-[13px] font-medium tracking-wide">TÀI LIỆU</span>
         </div>
         
-        <div class="flex items-center px-5 py-3.5 cursor-pointer hover:bg-fptblue transition-all">
+        <div class="flex items-center px-5 py-3.5 cursor-pointer hover:bg-fptblue transition-all" onclick="location.href='messages.php'">
           <i class="fas fa-envelope w-6 text-center text-white/70"></i>
           <span class="sidebar-text ml-4 text-[13px] font-medium tracking-wide">HÒM THƯ</span>
         </div>
         
-        <div class="flex items-center px-5 py-3.5 cursor-pointer hover:bg-fptblue transition-all">
+        <div class="flex items-center px-5 py-3.5 cursor-pointer hover:bg-fptblue transition-all" onclick="location.href='profile.php'">
           <i class="fas fa-user w-6 text-center text-white/70"></i>
           <span class="sidebar-text ml-4 text-[13px] font-medium tracking-wide">THÔNG TIN CÁ NHÂN</span>
         </div>
